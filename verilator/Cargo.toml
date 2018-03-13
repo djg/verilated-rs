@@ -1,0 +1,10 @@
+[package]
+name = "verilator"
+version = "0.0.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "Automated generation of verilator test modules."
+
+[dependencies]
+fnv = "1.0"
+syntex_syntax = "0.59.1"

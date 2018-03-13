@@ -1,0 +1,14 @@
+[package]
+name = "example"
+version = "0.0.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+publish = false
+
+build = "build.rs"
+
+[dependencies]
+verilated = { path = "../../verilated" }
+verilated-module = { path = "../../verilated-module" }
+
+[build-dependencies]
+verilator = { path = "../../verilator" }

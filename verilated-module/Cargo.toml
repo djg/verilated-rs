@@ -1,0 +1,11 @@
+[package]
+name = "verilated-module"
+version = "0.0.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+publish = false
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "*"

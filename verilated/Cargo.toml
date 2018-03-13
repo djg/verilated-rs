@@ -1,0 +1,6 @@
+[package]
+name = "verilated"
+version = "0.0.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+publish = false
+
