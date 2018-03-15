@@ -5,7 +5,10 @@ use std::env;
 use std::os::unix::ffi::OsStringExt;
 
 pub trait Module {
+    /// Evaluate the model.  Application must call when inputs change.
     fn eval(&mut self);
+    /// Simulation complete, run final blocks.
+    fn finish(&mut self);
 
     fn clock_up(&mut self);
     fn clock_down(&mut self);
@@ -79,6 +82,7 @@ where
 
         if !(self.tick_fn)(&mut self.core, self.tick_count) {
             super::set_finish();
+            self.core.finish();
         }
     }
 
