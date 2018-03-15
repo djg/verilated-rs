@@ -6,5 +6,11 @@ license = "MIT/Apache-2.0"
 description = "Automated generation of verilator test modules."
 
 [dependencies]
-fnv = "1.0"
-syntex_syntax = "0.59.1"
+cc = { version = "1.0", optional = true }
+fnv = { version = "1.0", optional = true }
+syntex_syntax = { version = "0.59.1", optional = true }
+
+[features]
+gen = ["cc"]
+module = ["fnv", "syntex_syntax"]
+default = ["gen"]
