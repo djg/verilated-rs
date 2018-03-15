@@ -5,18 +5,15 @@ extern crate verilated_module;
 use verilated_module::module;
 use verilated::test_bench::TestBench;
 
-#[module(cpu_top)]
-pub struct CpuTop {
-    #[port(clock)]
-    pub clk_i: bool,
-    #[port(reset)]
-    pub rst_i: bool,
-    #[port(output)]
-    pub count_o: [bool; 4],
+#[module(top)]
+pub struct Top {
+    #[port(clock)] pub clk_i: bool,
+    #[port(reset)] pub rst_i: bool,
+    #[port(output)] pub count_o: [bool; 4],
 }
 
 fn main() {
-    let mut tb = TestBench::<CpuTop>::init(|core, tick_count| {
+    let mut tb = TestBench::<Top>::init(|core, tick_count| {
         if tick_count > 10 {
             return false;
         }

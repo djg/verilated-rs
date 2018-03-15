@@ -11,4 +11,4 @@ verilated = { path = "../../verilated" }
 verilated-module = { path = "../../verilated-module" }
 
 [build-dependencies]
-verilator = { path = "../../verilator" }
+verilator = { path = "../../verilator", features=["gen","module"] }
