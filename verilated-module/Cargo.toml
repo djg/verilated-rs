@@ -8,4 +8,6 @@ publish = false
 proc-macro = true
 
 [dependencies]
-quote = "*"
+proc-macro2 = "0.2"
+quote = "0.4.2"
+syn = { version = "0.12.14", features = ["full"] }
