@@ -1,0 +1,2 @@
+[workspace]
+members = ["verilated", "verilated-module", "verilator", "verilator/example"]
