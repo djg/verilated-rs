@@ -1,2 +1,2 @@
 [workspace]
-members = ["verilated", "verilated-module", "verilator", "verilator/example"]
+members = ["verilated", "verilated-module", "verilator", "example"]
