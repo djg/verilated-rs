@@ -1,7 +1,7 @@
 // Copyright (C) 2018 Dan Glastonbury <dan.glastonbury@gmail.com>
 
-use std::os::raw::{c_char, c_int};
 use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_int};
 
 mod ffi {
     #![allow(dead_code)]
@@ -93,21 +93,20 @@ pub fn got_finish() -> bool {
 }
 
 /// Allow traces to at some point be enabled (disables some optimizations)
-//pub fn verilated_trace_ever_on(flag: c_int);
+pub fn trace_ever_on(on: bool) {
+    unsafe { ffi::verilated_trace_ever_on(on as _) }
+}
 
 /// Enable/disable assertions
 //pub fn verilated_set_assert_on(flag: c_int);
-
 //pub fn verilated_assert_on()  -> c_int;
 
 /// Enable/disable vpi fatal
 //pub fn verilated_set_fatal_on_vpi_error(flag: c_int);
-
 //pub fn verilated_fatal_on_vpi_error() -> c_int;
 
 /// Flush callback for VCD waves
 //pub fn verilated_flush_cb(cb: VerilatedVoidCb);
-
 // pub fn verilated_flush_call();
 
 /// Record command line arguments, for retrieval by $test$plusargs/$value$plusargs
