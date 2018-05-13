@@ -1,9 +1,8 @@
 use cc;
-use std::{env, fs};
-use std::ffi::OsString;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::{env, fs};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Standard {
@@ -27,18 +26,6 @@ pub struct Verilator {
 }
 
 impl Verilator {
-    pub fn new() -> Verilator {
-        Verilator {
-            target: None,
-            host: None,
-            out_dir: None,
-            root: None,
-            files: Vec::new(),
-            coverage: false,
-            trace: false,
-        }
-    }
-
     pub fn out_dir<P>(&mut self, out: P) -> &mut Verilator
     where
         P: AsRef<Path>,
@@ -79,7 +66,7 @@ impl Verilator {
         P: IntoIterator,
         P::Item: AsRef<Path>,
     {
-        for file in p.into_iter() {
+        for file in p {
             self.file(file);
         }
         self
@@ -161,7 +148,7 @@ impl Verilator {
             None => {
                 let mut t = getenv_unwrap("TARGET");
                 if t.ends_with("-darwin") {
-                    t = t + "11";
+                    t += "11";
                 }
                 t
             }
@@ -174,7 +161,34 @@ impl Verilator {
             .target(&target)
             .host(&host)
             .out_dir(&dst)
-            .define("VL_PRINTF", "printf")
+            .define("VL_PRINTF", "printf");
+
+        let tool = cpp_cfg.get_compiler();
+        if tool.is_like_clang() {
+            cpp_cfg
+                .flag("-faligned-new")
+                .flag("-fbracket-depth=4096")
+                .flag("-Qunused-arguments")
+                .flag("-Wno-parentheses-equality")
+                .flag("-Wno-sign-compare")
+                .flag("-Wno-uninitialized")
+                .flag("-Wno-unused-parameter")
+                .flag("-Wno-unused-variable")
+                .flag("-Wno-shadow");
+        }
+        if tool.is_like_gnu() {
+            cpp_cfg
+                .flag("-std=gnu++17")
+                .flag("-faligned-new")
+                .flag("-Wno-bool-operation")
+                .flag("-Wno-sign-compare")
+                .flag("-Wno-uninitialized")
+                .flag("-Wno-unused-but-set-variable")
+                .flag("-Wno-unused-parameter")
+                .flag("-Wno-unused-variable")
+                .flag("-Wno-shadow");
+        }
+        cpp_cfg
             .include(root.join("include"))
             .include(root.join("include/vltstd"))
             .include(&dst)
@@ -209,28 +223,42 @@ impl Verilator {
     fn find_verilator_exe(&self) -> PathBuf {
         // Check ${VERILATOR_ROOT} first...
         if let Some(mut root) = self.verilator_root() {
-            root.push("bin/verilator");
+            root.push("bin/verilator_bin");
             if root.is_file() {
                 return root;
             }
         }
 
         // Otherwise, check PATH
-        find_in_path("verilator".as_ref())
+        find_in_path("verilator_bin".as_ref())
     }
 
     fn verilator_root(&self) -> Option<PathBuf> {
         self.root
             .clone()
-            .or_else(|| env::var_os("VERILATOR_ROOT").map(|r| PathBuf::from(r)))
+            .or_else(|| env::var_os("VERILATOR_ROOT").map(PathBuf::from))
+    }
+}
+
+impl Default for Verilator {
+    fn default() -> Verilator {
+        Verilator {
+            target: None,
+            host: None,
+            out_dir: None,
+            root: None,
+            files: Vec::new(),
+            coverage: false,
+            trace: false,
+        }
     }
 }
 
 fn find_in_path(path: &Path) -> PathBuf {
-    env::split_paths(&env::var_os("PATH").unwrap_or(OsString::new()))
+    env::split_paths(&env::var_os("PATH").unwrap_or_default())
         .map(|p| p.join(path))
         .find(|p| fs::metadata(p).is_ok())
-        .unwrap_or(path.to_owned())
+        .unwrap_or_else(|| path.to_owned())
 }
 
 fn run(cmd: &mut Command, program: &str) {

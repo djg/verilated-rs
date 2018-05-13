@@ -3,7 +3,7 @@ extern crate cc;
 #[cfg(feature = "module")]
 extern crate fnv;
 #[cfg(feature = "module")]
-extern crate syntex_syntax as syntax;
+extern crate syn;
 
 #[cfg(feature = "gen")]
 pub mod gen;
