@@ -1,15 +1,17 @@
 extern crate verilator;
 
-use std::{env, fs};
 use std::path::PathBuf;
+use std::{env, fs};
 use verilator::gen::{Standard, Verilator};
 use verilator::module::ModuleGenerator;
 
 macro_rules! t {
-    ($e:expr) => (match $e {
-        Ok(e) => e,
-        Err(e) => panic!("{} failed with {}", stringify!($e), e),
-    })
+    ($e:expr) => {
+        match $e {
+            Ok(e) => e,
+            Err(e) => panic!("{} failed with {}", stringify!($e), e),
+        }
+    };
 }
 
 fn main() {
@@ -19,11 +21,11 @@ fn main() {
     t!(fs::create_dir_all(&out_dir));
 
     // Generate CPP shim from RUST
-    let mut module = ModuleGenerator::new();
+    let mut module = ModuleGenerator::default();
     module.generate("src/main.rs");
 
     // Generate CPP from Verilog
-    let mut verilator = Verilator::new();
+    let mut verilator = Verilator::default();
     verilator
         .with_coverage(true)
         .with_trace(true)
