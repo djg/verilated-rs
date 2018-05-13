@@ -1,14 +1,12 @@
 #![feature(proc_macro)]
 #![recursion_limit = "128"]
 
-extern crate proc_macro2;
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
-use proc_macro2::Term;
 use syn::ItemStruct;
 
 #[proc_macro_attribute]
@@ -17,7 +15,7 @@ pub fn module(_: TokenStream, input: TokenStream) -> TokenStream {
 
     let expanded = match syn::parse::<ItemStruct>(input) {
         Ok(item) => {
-            let src = Term::intern(&format!("\"/{}.rs\"", item.ident));
+            let src = format!("/{}.rs", item.ident);
             quote! {
                 include!(concat!(env!("OUT_DIR"), #src));
             }
