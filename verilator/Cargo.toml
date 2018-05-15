@@ -1,9 +1,15 @@
 [package]
 name = "verilator"
-version = "0.0.0"
+description = """
+Automated generation of Verilator test modules.
+"""
 authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+version = "0.1.0"
 license = "MIT/Apache-2.0"
-description = "Automated generation of verilator test modules."
+repository = "https://github.com/djg/verilated-rs"
+homepage = "https://github.com/djg/verilated-rs"
+keywords = ["verilator", "verilog"]
+categories = ["development-tools::build-utils","development-tools::ffi", "simulation"]
 
 [dependencies]
 cc = { version = "1.0", optional = true }
