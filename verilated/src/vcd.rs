@@ -1,4 +1,4 @@
-use std::ffi::{CString, OsStr};
+use std::ffi::{CStr, CString};
 use std::io;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
@@ -24,13 +24,16 @@ mod ffi {
     }
 }
 
+fn cstr(path: &Path) -> io::Result<CString> {
+    Ok(CString::new(path.as_os_str().as_bytes())?)
+}
+
 pub struct Vcd(pub *mut VcdC);
 
 impl Vcd {
-    fn _open(&mut self, path: &OsStr) -> io::Result<()> {
+    fn _open(&mut self, path: &CStr) -> io::Result<()> {
         unsafe {
-            let filename = path.as_bytes().as_ptr();
-            ffi::verilatedvcdc_open(self.0, filename as *const _);
+            ffi::verilatedvcdc_open(self.0, path.as_ptr());
             if ffi::verilatedvcdc_is_open(self.0) == 0 {
                 return Err(io::ErrorKind::Other.into());
             }
@@ -43,7 +46,8 @@ impl Vcd {
     }
 
     pub fn open<P: AsRef<Path>>(&mut self, path: P) -> io::Result<()> {
-        self._open(path.as_ref().as_os_str())
+        let path = cstr(path.as_ref())?;
+        self._open(&path)
     }
 
     pub fn open_next(&mut self, inc_filename: i32) {
