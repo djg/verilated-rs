@@ -21,6 +21,7 @@ pub struct Verilator {
     out_dir: Option<PathBuf>,
     root: Option<PathBuf>,
     files: Vec<(PathBuf, Option<Standard>)>,
+    module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
 }
@@ -72,6 +73,28 @@ impl Verilator {
         self
     }
 
+    /// Add a directory to the `-y` or path to search for modules
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    ///
+    /// let module_path = Path::new("/path/to/modules");
+    ///
+    /// verilator::Verilator::default()
+    ///     .file("top.v")
+    ///     .module(module_path)
+    ///     .build(...);
+    /// ```
+    pub fn module<P>(&mut self, dir: P) -> &mut Verilator
+    where
+        P: AsRef<Path>,
+    {
+        self.module_directories.push(dir.as_ref().to_path_buf());
+        self
+    }
+
     pub fn with_coverage(&mut self, t: bool) -> &mut Verilator {
         self.coverage = t;
         self
@@ -119,6 +142,11 @@ impl Verilator {
 
         if self.trace {
             cmd.arg("--trace");
+        }
+
+        for dir in &self.module_directories {
+            cmd.arg("-y");
+            cmd.arg(dir);
         }
 
         for &(ref file, ref standard) in &self.files {
@@ -248,6 +276,7 @@ impl Default for Verilator {
             out_dir: None,
             root: None,
             files: Vec::new(),
+            module_directories: Vec::new(),
             coverage: false,
             trace: false,
         }
