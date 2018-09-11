@@ -24,6 +24,7 @@ pub struct Verilator {
     module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
+    w_width: bool,
 }
 
 impl Verilator {
@@ -105,6 +106,11 @@ impl Verilator {
         self
     }
 
+    pub fn warn_width(&mut self, t: bool) -> &mut Verilator {
+        self.w_width = t;
+        self
+    }
+
     pub fn build(&mut self, top_module: &str) -> PathBuf {
         let dst = self.out_dir
             .clone()
@@ -142,6 +148,10 @@ impl Verilator {
 
         if self.trace {
             cmd.arg("--trace");
+        }
+
+        if !self.w_width {
+            cmd.arg("-Wno-width");
         }
 
         for dir in &self.module_directories {
@@ -279,6 +289,7 @@ impl Default for Verilator {
             module_directories: Vec::new(),
             coverage: false,
             trace: false,
+            w_width: true,
         }
     }
 }
