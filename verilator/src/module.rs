@@ -402,7 +402,7 @@ impl {rs_ty} {{"#,
         if let Some(reset) = ports.reset {
             t!(writeln!(
                 rs_out,
-                r#"    fn reset_toggle(&mut self) {{
+                r#"    pub fn reset_toggle(&mut self) {{
         unsafe {{
             ffi::{c_ty}_{rst}_toggle(self.0);
         }}
