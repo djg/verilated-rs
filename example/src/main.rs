@@ -1,6 +1,3 @@
-#![feature(proc_macro)]
-#![feature(duration_extras)]
-
 extern crate verilated;
 extern crate verilated_module;
 
