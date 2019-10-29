@@ -547,10 +547,10 @@ fn ty2name(ty: &syn::Type) -> String {
         syn::Type::Array(arr) => {
             assert!(ty2name(&*arr.elem) == "u8");
             match expr2width(&arr.len) {
-                0...8 => "u8".to_string(),
-                9...16 => "u16".to_string(),
-                17...32 => "u32".to_string(),
-                33...64 => "u64".to_string(),
+                0..=8 => "u8".to_string(),
+                9..=16 => "u16".to_string(),
+                17..=32 => "u32".to_string(),
+                33..=64 => "u64".to_string(),
                 _ => unreachable!(),
             }
         }
