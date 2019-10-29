@@ -24,7 +24,7 @@ pub struct Verilator {
     module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
-    w_width: bool,
+    suppress_warnings: Vec<String>,
 }
 
 impl Verilator {
@@ -107,7 +107,14 @@ impl Verilator {
     }
 
     pub fn warn_width(&mut self, t: bool) -> &mut Verilator {
-        self.w_width = t;
+        if !t {
+            self.suppress_warnings.push("width".to_string());
+        }
+        self
+    }
+
+    pub fn no_warn(&mut self, warning: &str) -> &mut Verilator {
+        self.suppress_warnings.push(warning.to_ascii_lowercase());
         self
     }
 
@@ -150,8 +157,8 @@ impl Verilator {
             cmd.arg("--trace");
         }
 
-        if !self.w_width {
-            cmd.arg("-Wno-width");
+        for warn in &self.suppress_warnings {
+            cmd.arg(format!("-Wno-{}", warn));
         }
 
         for dir in &self.module_directories {
@@ -289,7 +296,7 @@ impl Default for Verilator {
             module_directories: Vec::new(),
             coverage: false,
             trace: false,
-            w_width: true,
+            suppress_warnings: Vec::new(),
         }
     }
 }
