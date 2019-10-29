@@ -329,14 +329,7 @@ impl {rs_ty} {{"#,
 
         t!(writeln!(
             rs_out,
-            r#"}}
-"#
-        ));
-
-        t!(writeln!(
-            rs_out,
-            r#"impl {rs_ty} {{
-
+            r#"
     pub fn eval(&mut self) {{
         unsafe {{
             ffi::{c_ty}_eval(self.0);
@@ -350,7 +343,6 @@ impl {rs_ty} {{"#,
     }}
 "#,
             c_ty = c_ty,
-            rs_ty = rs_ty,
         ));
 
         // Tracing API
