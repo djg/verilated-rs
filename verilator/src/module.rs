@@ -279,6 +279,7 @@ impl Drop for {rs_ty} {{
     }}
 }}
 
+#[allow(dead_code, non_snake_case)]
 impl {rs_ty} {{"#,
             c_ty = c_ty,
             rs_ty = rs_ty
