@@ -25,7 +25,6 @@ mod ffi {
         //pub fn verilated_flush_cb(cb: VerilatedVoidCb);
         pub fn verilated_flush_call();
         pub fn verilated_command_args(argc: c_int, argv: *const *const c_char);
-        pub fn verilated_command_args_add(argc: c_int, argv: *const *const c_char);
         //    static CommandArgValues* getCommandArgs() {return &s_args;}
         pub fn verilated_command_args_plus_match(prefixp: *const c_char) -> *const c_char;
         pub fn verilated_product_name() -> *const c_char;
