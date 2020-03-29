@@ -1,6 +1,5 @@
 use std::ffi::{CStr, CString};
 use std::io;
-use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 
 pub enum VcdC {}
@@ -24,8 +23,15 @@ mod ffi {
     }
 }
 
+#[cfg(unix)]
 fn cstr(path: &Path) -> io::Result<CString> {
+    use std::os::unix::ffi::OsStrExt;
     Ok(CString::new(path.as_os_str().as_bytes())?)
+}
+
+#[cfg(not(unix))]
+fn cstr(path: &Path) -> io::Result<CString> {
+    Ok(CString::new(path.to_str().expect("path is not valid utf-8").as_bytes())?)
 }
 
 pub struct Vcd(pub *mut VcdC);
