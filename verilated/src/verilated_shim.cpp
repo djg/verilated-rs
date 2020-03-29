@@ -104,11 +104,6 @@ verilated_command_args(int argc, const char** argv) {
   Verilated::commandArgs(argc, argv);
 }
 
-void
-verilated_command_args_add(int argc, const char** argv) {
-  Verilated::commandArgsAdd(argc, argv);
-}
-
 //    static CommandArgValues* getCommandArgs() {return &s_args;}
 
 /// Match plusargs with a given prefix. Returns static char* valid only for a single call
