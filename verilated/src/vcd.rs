@@ -31,7 +31,14 @@ fn cstr(path: &Path) -> io::Result<CString> {
 
 #[cfg(not(unix))]
 fn cstr(path: &Path) -> io::Result<CString> {
-    Ok(CString::new(path.to_str().expect("path is not valid utf-8").as_bytes())?)
+    Ok(CString::new(
+        path.to_str()
+            .ok_or(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("path is not valid utf-8"),
+            ))?
+            .as_bytes(),
+    )?)
 }
 
 pub struct Vcd(pub *mut VcdC);
