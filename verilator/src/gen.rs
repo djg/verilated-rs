@@ -119,7 +119,8 @@ impl Verilator {
     }
 
     pub fn build(&mut self, top_module: &str) -> PathBuf {
-        let dst = self.out_dir
+        let dst = self
+            .out_dir
             .clone()
             .unwrap_or_else(|| PathBuf::from(getenv_unwrap("OUT_DIR")));
 
@@ -173,9 +174,9 @@ impl Verilator {
                         Standard::Verilog1995 => &"+1364-1995ext",
                         Standard::Verilog2001 => &"+1364-2001ext",
                         Standard::Verilog2005 => &"+1364-2005ext",
-                        Standard::SystemVerilog2005 => &"1800-2005ext",
-                        Standard::SystemVerilog2009 => &"1800-2009ext",
-                        Standard::SystemVerilog2012 => &"1800-2012ext",
+                        Standard::SystemVerilog2005 => &"+1800-2005ext",
+                        Standard::SystemVerilog2009 => &"+1800-2009ext",
+                        Standard::SystemVerilog2012 => &"+1800-2012ext",
                     };
                     let flag = format!("{}+{}", flag, ext.to_string_lossy());
                     cmd.arg(flag);
