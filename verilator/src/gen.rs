@@ -78,7 +78,7 @@ impl Verilator {
     ///
     /// # Example
     ///
-    /// ```no_run
+    /// ```ignore
     /// use std::path::Path;
     ///
     /// let module_path = Path::new("/path/to/modules");

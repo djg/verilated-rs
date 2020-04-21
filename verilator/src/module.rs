@@ -32,10 +32,10 @@ impl ModuleGenerator {
     /// Note that for Cargo builds this defaults to `$OUT_DIR` and it's not
     /// necessary to call.
     ///
-    /// ```no_run
+    /// ```ignore
     /// use verilated::gen::ModuleGenerator;
     ///
-    /// let mut cfg = ModuleGenerator::new();
+    /// let mut cfg = ModuleGenerator::default();
     /// cfg.out_dir("path/to/output");
     /// ```
     pub fn out_dir<P>(&mut self, p: P) -> &mut ModuleGenerator
@@ -55,7 +55,7 @@ impl ModuleGenerator {
     ///
     /// # Examples
     ///
-    /// ```no_run
+    /// ```ignore
     /// use verilated::gen::ModuleGenerator;
     ///
     /// let mut cfg = ModuleGenerator::new();
