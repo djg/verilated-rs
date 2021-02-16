@@ -6,6 +6,7 @@ use std::os::raw::{c_char, c_int};
 mod ffi {
     #![allow(dead_code)]
 
+    use std::ffi::c_void;
     use std::os::raw::{c_char, c_int};
 
     extern "C" {
@@ -22,8 +23,6 @@ mod ffi {
         pub fn verilated_assert_on() -> c_int;
         pub fn verilated_set_fatal_on_vpi_error(flag: c_int);
         pub fn verilated_fatal_on_vpi_error() -> c_int;
-        //pub fn verilated_flush_cb(cb: VerilatedVoidCb);
-        pub fn verilated_flush_call();
         pub fn verilated_command_args(argc: c_int, argv: *const *const c_char);
         //    static CommandArgValues* getCommandArgs() {return &s_args;}
         pub fn verilated_command_args_plus_match(prefixp: *const c_char) -> *const c_char;
@@ -31,6 +30,25 @@ mod ffi {
         pub fn verilated_product_version() -> *const c_char;
         pub fn verilated_internals_dump();
         pub fn verilated_scopes_dump();
+    }
+
+    #[cfg(verilator="flush_and_exit_cb")]
+    pub type VoidPCb = unsafe extern "C" fn(*mut c_void);
+
+    #[cfg(verilator="flush_and_exit_cb")]
+    extern "C" {
+        pub fn verilated_add_flush_cb(cb: VoidPCb, datap: *mut c_void);
+        pub fn verilated_remove_flush_cb(cb: VoidPCb, datap: *mut c_void);
+        pub fn verilator_run_flush_callbacks();
+        pub fn verilated_add_exit_cb(cb: VoidPCb, datap: *mut c_void);
+        pub fn verilated_remove_exit_cb(cb: VoidPCb, datap: *mut c_void);
+        pub fn verilator_run_exit_callbacks();
+    }
+
+    #[cfg(not(verilator="flush_and_exit_cb"))]
+    extern "C" {
+        //pub fn verilated_flush_cb(cb: VerilatedVoidCb);
+        pub fn verilated_flush_call();
     }
 }
 

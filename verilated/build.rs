@@ -4,6 +4,7 @@ extern crate verilator;
 use std::env;
 use std::path::PathBuf;
 use verilator::find_verilator_root;
+use verilator::verilator_version;
 
 fn getenv_unwrap(v: &str) -> String {
     match env::var(v) {
@@ -18,6 +19,13 @@ fn fail(s: &str) -> ! {
 
 fn main() {
     if let Some(root) = find_verilator_root() {
+        // cargo:rustc-cfg=KEY[="VALUE"]
+        let (major, minor) = verilator_version().unwrap();
+        println!("cargo:rustc-cfg=verilator_version=\"{}.{}\"", major, minor);
+        if major == 4 && minor >= 38 {
+            println!("cargo:rustc-cfg=verilator=\"flush_and_exit_cb\"");
+        }
+
         let include = root.join("include");
 
         let mut target = getenv_unwrap("TARGET");
@@ -61,6 +69,8 @@ fn main() {
                 .flag("-Wno-unused-variable")
                 .flag("-Wno-shadow");
         }
+        cfg.define("VERILATOR_VERSION_MAJOR", format!("{}", major).as_str())
+            .define("VERILATOR_VERSION_MINOR", format!("{}", minor).as_str());
         cfg.include(&include)
             .include(include.join("vltstd"))
             .files(files)
