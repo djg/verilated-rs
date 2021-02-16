@@ -87,6 +87,41 @@ verilated_fatal_on_vpi_error() {
   return Verilated::fatalOnVpiError() ? 1 : 0;
 }
 
+#if VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38
+typedef void (*voidp_cb)(void*);  // Callback type for below
+
+/// Callbacks to run on global flush
+void
+verilated_add_flush_cb(voidp_cb cb, void* datap) {
+  Verilated::addFlushCb(cb, datap);
+}
+
+void
+verilated_remove_flush_cb(voidp_cb cb, void* datap) {
+  Verilated::removeFlushCb(cb, datap);
+}
+
+void
+verilator_run_flush_callbacks() {
+  Verilated::runFlushCallbacks();
+}
+
+/// Callbacks to run prior to termination
+void
+verilated_add_exit_cb(voidp_cb cb, void* datap) {
+  Verilated::addExitCb(cb, datap);
+}
+
+void
+verilated_remove_exit_cb(voidp_cb cb, void* datap) {
+  Verilated::removeExitCb(cb, datap);
+}
+
+void
+verilator_run_exit_callbacks() {
+  Verilated::runExitCallbacks();
+}
+#else // !(VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38)
 /// Flush callback for VCD waves
 void
 verilated_flush_cb(VerilatedVoidCb cb) {
@@ -97,6 +132,7 @@ void
 verilated_flush_call() {
   Verilated::flushCall();
 }
+#endif // VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38
 
 /// Record command line arguments, for retrieval by $test$plusargs/$value$plusargs
 void
