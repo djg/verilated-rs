@@ -3,7 +3,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use crate::verilator_version;
 use std::{
     env, fs,
     io::ErrorKind,
@@ -136,9 +135,6 @@ impl Verilator {
         let mut cmd = Command::new(verilator_exe.clone());
         cmd.arg("--getenv").arg("VERILATOR_ROOT");
 
-        // Determine the Verilator version
-        let (verilator_major, verilator_minor) = verilator_version().unwrap();
-
         println!("running: {:?}", cmd);
         let root = match cmd.output() {
             Ok(output) => PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()),
@@ -250,10 +246,6 @@ impl Verilator {
             .include(&dst)
             .file(dst.join(format!("V{}.cpp", top_module)))
             .file(dst.join(format!("V{}__Syms.cpp", top_module)));
-
-        if verilator_major > 4 || verilator_minor >= 38 {
-            cpp_cfg.file(dst.join(format!("V{}__Slow.cpp", top_module)));
-        }
 
         for &(ref f, _) in &self.files {
             match f.extension() {
