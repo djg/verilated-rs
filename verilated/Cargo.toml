@@ -4,7 +4,7 @@ description = """
 Bindings to Verilated APIs for working with Verilator's generated verilog simulators.
 """
 authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
-version = "0.1.1"
+version = "0.1.2"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/djg/verilated-rs"
 homepage = "https://github.com/djg/verilated-rs"
