@@ -1,6 +1,10 @@
 // -*- mode: C++; c-file-style: "cc-mode" -*-
 /// \file
 /// \brief VerilatedVcdC Shim: Expose C++ interface as C functions.
+// Copyright 2018 - 2021, Dan Glastonbury <dan.glastonbury@gmail.com> and the
+// verilated-rs contributors.
+//
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 
 #include <verilated_vcd_c.h>
 

@@ -1,5 +1,9 @@
+// Copyright 2018 - 2021, Dan Glastonbury <dan.glastonbury@gmail.com> and the
+// verilated-rs contributors.
+//
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::verilator_version;
-use cc;
 use std::{
     env, fs,
     io::ErrorKind,
