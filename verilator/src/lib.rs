@@ -1,21 +1,15 @@
 #[cfg(feature = "gen")]
-extern crate cc;
-#[cfg(feature = "module")]
-extern crate fnv;
-extern crate regex;
-#[cfg(feature = "module")]
-extern crate syn;
-
-#[cfg(feature = "gen")]
 pub mod gen;
 #[cfg(feature = "module")]
 pub mod module;
 
 use regex::Regex;
-use std::env;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::str::from_utf8;
+use std::{
+    env,
+    path::{Path, PathBuf},
+    process::Command,
+    str::from_utf8,
+};
 
 fn check_verilator_bin(path: &Path) -> bool {
     path.join("verilator_bin").is_file()

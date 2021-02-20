@@ -1,10 +1,11 @@
 [package]
 name = "verilated-module"
+edition = "2018"
 authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
 description = """
 A procedural macro for replacing verilated marked up structs with include of generated code.
 """
-version = "0.1.1"
+version = "0.2.0"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/djg/verilated-rs"
 homepage = "https://github.com/djg/verilated-rs"

@@ -1,9 +1,11 @@
-use verilator_version;
+use crate::verilator_version;
 use cc;
-use std::io::ErrorKind;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{env, fs};
+use std::{
+    env, fs,
+    io::ErrorKind,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Standard {

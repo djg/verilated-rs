@@ -1,11 +1,5 @@
-#![recursion_limit = "128"]
-
-extern crate proc_macro;
-#[macro_use]
-extern crate quote;
-extern crate syn;
-
 use proc_macro::TokenStream;
+use quote::*;
 use syn::ItemStruct;
 
 #[proc_macro_attribute]
@@ -19,7 +13,7 @@ pub fn module(_: TokenStream, input: TokenStream) -> TokenStream {
                 include!(concat!(env!("OUT_DIR"), #src));
             }
         }
-        Err(..) => quote!{},
+        Err(..) => quote! {},
     };
 
     expanded.into()

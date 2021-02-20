@@ -32,10 +32,10 @@ mod ffi {
         pub fn verilated_scopes_dump();
     }
 
-    #[cfg(verilator="flush_and_exit_cb")]
+    #[cfg(verilator = "flush_and_exit_cb")]
     pub type VoidPCb = unsafe extern "C" fn(*mut c_void);
 
-    #[cfg(verilator="flush_and_exit_cb")]
+    #[cfg(verilator = "flush_and_exit_cb")]
     extern "C" {
         pub fn verilated_add_flush_cb(cb: VoidPCb, datap: *mut c_void);
         pub fn verilated_remove_flush_cb(cb: VoidPCb, datap: *mut c_void);
@@ -45,7 +45,7 @@ mod ffi {
         pub fn verilator_run_exit_callbacks();
     }
 
-    #[cfg(not(verilator="flush_and_exit_cb"))]
+    #[cfg(not(verilator = "flush_and_exit_cb"))]
     extern "C" {
         //pub fn verilated_flush_cb(cb: VerilatedVoidCb);
         pub fn verilated_flush_call();

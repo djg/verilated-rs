@@ -1,10 +1,5 @@
-extern crate cc;
-extern crate verilator;
-
-use std::env;
-use std::path::PathBuf;
-use verilator::find_verilator_root;
-use verilator::verilator_version;
+use std::{env, path::PathBuf};
+use verilator::{find_verilator_root, verilator_version};
 
 fn getenv_unwrap(v: &str) -> String {
     match env::var(v) {
