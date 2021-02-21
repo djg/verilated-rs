@@ -3,103 +3,267 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::ffi::{CStr, CString};
-use std::io;
-use std::path::Path;
+use crate::TimeUnit;
+use std::{ffi::CString, path::Path};
 
-pub enum VcdC {}
+mod std_cpp {
+    // TODO: This all depends upon the STL headers supplied by the system C++
+    // compiler. We should bindgen this on each platform.
 
-mod ffi {
-    use super::VcdC;
-    use std::os::raw::{c_char, c_int};
+    #[repr(C)]
+    #[derive(Clone, Copy, Debug)]
+    #[allow(non_camel_case_types)]
+    pub struct std___compressed_pair {
+        pub _address: u8,
+    }
+
+    #[repr(C)]
+    #[allow(non_camel_case_types)]
+    pub struct std_basic_string {
+        pub _base: u8,
+        pub __r_: std___compressed_pair,
+    }
+
+    #[allow(non_camel_case_types)]
+    pub type std_string = std_basic_string;
+
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    #[allow(non_camel_case_types)]
+    pub struct std_allocator_traits {
+        pub _address: u8,
+    }
+
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    #[allow(non_camel_case_types)]
+    pub struct std___make_tree_node_types {
+        pub _address: u8,
+    }
+
+    #[repr(C)]
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
+    pub struct std___tree {
+        pub __begin_node_: std___make_tree_node_types,
+        pub __pair1_: std___compressed_pair,
+        pub __pair3_: std___compressed_pair,
+    }
+
+    #[repr(C)]
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
+    pub struct std_map {
+        pub __tree_: std___tree,
+    }
+
+    #[repr(C)]
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
+    pub struct std___vector_base {
+        pub _base: u8,
+        pub __begin_: std_allocator_traits,
+        pub __end_: std_allocator_traits,
+        pub __end_cap_: std___compressed_pair,
+    }
+
+    #[repr(C)]
+    #[derive(Debug)]
+    #[allow(non_camel_case_types)]
+    pub struct std_vector {
+        pub _base: std___vector_base,
+    }
+}
+
+mod verilated_vcd {
+    use super::std_cpp::*;
+    use std::{
+        mem::MaybeUninit,
+        os::raw::{c_char, c_int, c_void},
+    };
+
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct VerilatedAssertOneThread {
+        pub _address: u8,
+    }
+
+    #[repr(C)]
+    #[allow(non_snake_case)]
+    pub struct VerilatedVcdFile {
+        pub vtable_: *const c_void,
+        pub m_fd: c_int,
+    }
+
+    #[repr(C)]
+    #[allow(non_snake_case)]
+    pub struct VerilatedTrace {
+        pub vtable_: *const c_void,
+        pub m_sigs_oldvalp: *mut u32,
+        pub m_timeLastDump: u64,
+        pub m_initCbs: std_vector,
+        pub m_fullCbs: std_vector,
+        pub m_chgCbs: std_vector,
+        pub m_cleanupCbs: std_vector,
+        pub m_fullDump: bool,
+        pub m_nextCode: u32,
+        pub m_numSignals: u32,
+        pub m_maxBits: u32,
+        pub m_moduleName: std_string,
+        pub m_scopeEscape: c_char,
+        pub m_timeRes: f64,
+        pub m_timeUnit: f64,
+        pub m_assertOne: VerilatedAssertOneThread,
+    }
+
+    #[repr(C)]
+    #[allow(non_snake_case)]
+    pub struct VerilatedVcd {
+        pub _base: VerilatedTrace,
+        pub m_filep: *mut VerilatedVcdFile,
+        pub m_fileNewed: bool,
+        pub m_isOpen: bool,
+        pub m_evcd: bool,
+        pub m_filename: std_string,
+        pub m_rolloverMB: u64,
+        pub m_modDepth: c_int,
+        pub m_wrBufp: *mut c_char,
+        pub m_wrFlushp: *mut c_char,
+        pub m_writep: *mut c_char,
+        pub m_wrChunkSize: u64,
+        pub m_wroteBytes: u64,
+        pub m_suffixes: std_vector,
+        pub m_suffixesp: *const c_char,
+        pub m_namemapp: *mut std_map,
+    }
 
     extern "C" {
-        pub fn verilatedvcdc_new() -> *mut VcdC;
-        pub fn verilatedvcdc_delete(vcd: *mut VcdC);
-        pub fn verilatedvcdc_is_open(vcd: *mut VcdC) -> c_int;
-        pub fn verilatedvcdc_open(vcd: *mut VcdC, filename: *const c_char);
-        pub fn verilatedvcdc_open_next(vcd: *mut VcdC, inc_filename: c_int);
-        pub fn verilatedvcdc_rollover_mb(vcd: *mut VcdC, rolloverMB: usize);
-        pub fn verilatedvcdc_close(vcd: *mut VcdC);
-        pub fn verilatedvcdc_flush(vcd: *mut VcdC);
-        pub fn verilatedvcdc_dump(vcd: *mut VcdC, timeui: u64);
-        pub fn verilatedvcdc_set_time_unit(vcd: *mut VcdC, unit: *const c_char);
-        pub fn verilatedvcdc_set_time_resolution(vcd: *mut VcdC, unit: *const c_char);
+        #[link_name = "\u{1}__ZN12VerilatedVcdC1EP16VerilatedVcdFile"]
+        pub fn constructor(this: *mut VerilatedVcd, filep: *mut VerilatedVcdFile);
+        #[link_name = "\u{1}__ZN12VerilatedVcdD1Ev"]
+        pub fn destructor(this: *mut VerilatedVcd);
+        #[link_name = "\u{1}__ZN12VerilatedVcd4openEPKc"]
+        pub fn open(this: *mut VerilatedVcd, filename: *const c_char);
+        #[link_name = "\u{1}__ZN12VerilatedVcd8openNextEb"]
+        pub fn open_next(this: *mut VerilatedVcd, incFilename: bool);
+        #[link_name = "\u{1}__ZN12VerilatedVcd5flushEv"]
+        pub fn flush(this: *mut VerilatedVcd);
+        #[link_name = "\u{1}__ZN14VerilatedTraceI12VerilatedVcdE4dumpEm"]
+        pub fn dump(this: *mut VerilatedVcd, time: u64);
+    }
+
+    impl VerilatedVcd {
+        pub unsafe fn new(filep: *mut VerilatedVcdFile) -> Self {
+            let mut tmp = MaybeUninit::uninit();
+            constructor(tmp.as_mut_ptr(), filep);
+            tmp.assume_init()
+        }
+
+        pub unsafe fn destruct(&mut self) {
+            destructor(self)
+        }
+
+        pub unsafe fn open(&mut self, filename: *const c_char) {
+            open(self, filename)
+        }
+
+        pub fn is_open(&self) -> bool {
+            self.m_isOpen
+        }
+
+        pub fn open_next(&mut self, inc_filename: bool) {
+            unsafe { open_next(self, inc_filename) }
+        }
+
+        pub unsafe fn flush(&mut self) {
+            flush(self)
+        }
+
+        pub unsafe fn dump(&mut self, time: u64) {
+            dump(self, time)
+        }
+    }
+
+    impl Default for VerilatedVcd {
+        fn default() -> Self {
+            unsafe { Self::new(std::ptr::null_mut()) }
+        }
     }
 }
 
-#[cfg(unix)]
-fn cstr(path: &Path) -> io::Result<CString> {
-    use std::os::unix::ffi::OsStrExt;
-    Ok(CString::new(path.as_os_str().as_bytes())?)
+/// Create a VCD dump file in C standalone (no SystemC) simulations.
+/// Also derived for use in SystemC simulations.
+/// Thread safety: Unless otherwise indicated, every function is VL_MT_UNSAFE_ONE
+pub struct Vcd {
+    sptrace: verilated_vcd::VerilatedVcd,
 }
-
-#[cfg(not(unix))]
-fn cstr(path: &Path) -> io::Result<CString> {
-    Ok(CString::new(
-        path.to_str()
-            .ok_or(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("path is not valid utf-8"),
-            ))?
-            .as_bytes(),
-    )?)
-}
-
-pub struct Vcd(pub *mut VcdC);
 
 impl Vcd {
-    fn _open(&mut self, path: &CStr) -> io::Result<()> {
+    /// Open a new VCD file
+    /// This includes a complete header dump each time it is called,
+    /// just as if this object was deleted and reconstructed.
+    pub fn open(path: impl AsRef<Path>) -> Result<Self, ()> {
+        #[cfg(unix)]
+        fn path_to_bytes<P: AsRef<Path>>(path: P) -> Vec<u8> {
+            use std::os::unix::ffi::OsStrExt;
+            path.as_ref().as_os_str().as_bytes().to_vec()
+        }
+
+        let filename = unsafe { CString::from_vec_unchecked(path_to_bytes(path)) };
+        let mut sptrace = verilated_vcd::VerilatedVcd::default();
         unsafe {
-            ffi::verilatedvcdc_open(self.0, path.as_ptr());
-            if ffi::verilatedvcdc_is_open(self.0) == 0 {
-                return Err(io::ErrorKind::Other.into());
-            }
-            let time_unit = CString::new("1ns").unwrap();
-            ffi::verilatedvcdc_set_time_unit(self.0, time_unit.as_ptr() as *const _);
-            ffi::verilatedvcdc_set_time_resolution(self.0, time_unit.as_ptr() as *const _);
+            sptrace.open(filename.as_ptr());
         }
-
-        Ok(())
+        if sptrace.is_open() {
+            Ok(Vcd { sptrace })
+        } else {
+            Err(())
+        }
     }
 
-    pub fn open<P: AsRef<Path>>(&mut self, path: P) -> io::Result<()> {
-        let path = cstr(path.as_ref())?;
-        self._open(&path)
+    /// Continue a VCD dump by rotating to a new file name
+    /// The header is only in the first file created, this allows
+    /// "cat" to be used to combine the header plus any number of data files.
+    pub fn open_next(&mut self, inc_filename: bool) {
+        self.sptrace.open_next(inc_filename);
     }
 
-    pub fn open_next(&mut self, inc_filename: i32) {
-        unsafe { ffi::verilatedvcdc_open_next(self.0, inc_filename) }
-    }
-
+    /// Set size in megabytes after which new file should be created
     pub fn rollover_mb(&mut self, rollover_mb: usize) {
-        unsafe { ffi::verilatedvcdc_rollover_mb(self.0, rollover_mb) }
+        self.sptrace.m_rolloverMB = rollover_mb as u64;
     }
 
+    /// Flush dump
     pub fn flush(&mut self) {
-        unsafe { ffi::verilatedvcdc_flush(self.0) }
-    }
-
-    pub fn dump(&mut self, nanos: u64) {
-        unsafe { ffi::verilatedvcdc_dump(self.0, nanos) }
-    }
-}
-
-impl Default for Vcd {
-    fn default() -> Vcd {
-        let ptr = unsafe { ffi::verilatedvcdc_new() };
-        if ptr.is_null() {
-            panic!("Failed to allocate VerilatedVcdC");
+        unsafe {
+            self.sptrace.flush();
         }
-        Vcd(ptr)
+    }
+
+    /// Write one cycle of dump data
+    pub fn dump(&mut self, time: u64) {
+        unsafe {
+            self.sptrace.dump(time);
+        }
+    }
+
+    /// Set time units (s/ms, defaults to ns)
+    /// For Verilated models, these propagate from the Verilated default --timeunit
+    pub fn set_time_unit(&mut self, unit: TimeUnit) {
+        self.sptrace._base.m_timeUnit = unit.into();
+    }
+
+    /// Set time resolution (s/ms, defaults to ns)
+    /// For Verilated models, these propagate from the Verilated default --timeunit
+    pub fn set_time_resolution(&mut self, unit: TimeUnit) {
+        self.sptrace._base.m_timeRes = unit.into();
     }
 }
 
 impl Drop for Vcd {
     fn drop(&mut self) {
         unsafe {
-            ffi::verilatedvcdc_close(self.0);
-            ffi::verilatedvcdc_delete(self.0);
+            self.sptrace.destruct();
         }
     }
 }

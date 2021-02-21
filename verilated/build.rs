@@ -46,7 +46,7 @@ fn main() {
         }
         cfg.define("VM_COVERAGE", "0")
             .define("VM_SC", "0")
-            .define("VM_TRACE", "0")
+            .define("VM_TRACE", "1")
             .define("VM_TRACE_FST", "0");
         cfg.include(&include).include(include.join("vltstd"));
         cfg.files(files);

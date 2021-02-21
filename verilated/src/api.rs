@@ -344,6 +344,32 @@ impl From<TimeUnit> for c_int {
     }
 }
 
+impl From<TimeUnit> for f64 {
+    fn from(val: TimeUnit) -> Self {
+        use TimeUnit::*;
+        match val {
+            _100s => 1e2,
+            _10s => 1e1,
+            _1s => 1e0,
+            _100ms => 1e-1,
+            _10ms => 1e-2,
+            _1ms => 1e-3,
+            _100us => 1e-4,
+            _10us => 1e-5,
+            _1us => 1e-6,
+            _100ns => 1e-7,
+            _10ns => 1e-8,
+            _1ns => 1e-9,
+            _100ps => 1e-10,
+            _10ps => 1e-11,
+            _1ps => 1e-12,
+            _100fs => 1e-13,
+            _10fs => 1e-14,
+            _1fs => 1e-15,
+        }
+    }
+}
+
 pub fn timeunit() -> TimeUnit {
     TimeUnit::try_from(unsafe { -verilated::s_s.timeunit })
         .expect("Invalid internal verilated state")
