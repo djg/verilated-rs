@@ -1,0 +1,16 @@
+[workspace]
+
+[package]
+name = "tracing"
+edition = "2018"
+version = "1.0.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+
+build = "build.rs"
+
+[dependencies]
+verilated = { path = "../../verilated" }
+
+[build-dependencies]
+anyhow = "1.0"
+verilator = { path = "../../verilator" }
