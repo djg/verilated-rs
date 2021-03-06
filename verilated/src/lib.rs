@@ -8,3 +8,13 @@ pub mod vcd;
 
 pub use crate::api::*;
 pub use verilated_macro::verilated;
+
+extern "C" {
+    fn sc_time_stamp() -> f64;
+}
+
+// Re-export to a binding of C friendly name `sc_time_stamp`
+#[no_mangle]
+extern "C" fn _Z13sc_time_stampv() -> f64 {
+    unsafe { sc_time_stamp() }
+}

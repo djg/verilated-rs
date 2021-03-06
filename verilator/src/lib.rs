@@ -5,8 +5,6 @@
 
 #[cfg(feature = "gen")]
 pub mod gen;
-#[cfg(feature = "module")]
-pub mod module;
 
 use std::{
     env,

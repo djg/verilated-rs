@@ -5,10 +5,11 @@
 
 use std::{
     convert::TryFrom,
-    ffi::{c_void, CStr, CString, OsStr},
+    ffi::{c_void, CStr, CString},
     num::NonZeroI32,
     os::raw::{c_char, c_int},
     panic::{catch_unwind, AssertUnwindSafe},
+    path::Path,
 };
 
 mod verilated {
@@ -242,7 +243,7 @@ pub fn got_finish() -> bool {
 }
 
 /// Allow traces to at some point be enabled (disables some optimizations)
-pub fn trace_ever_on(on: bool) {
+pub fn set_trace_ever_on(on: bool) {
     if on {
         set_calc_unused_sigs(on);
     }
@@ -487,7 +488,11 @@ pub fn run_exit_callbacks() {
 /// Record command line arguments, for retrieval by $test$plusargs/$value$plusargs,
 /// and for parsing +verilator+ run-time arguments.
 /// This should be called before the first model is created.
-pub fn set_command_args(args: &[&CStr]) {
+pub fn set_command_args(args: impl IntoIterator<Item = String>) {
+    let args = args
+        .into_iter()
+        .map(|a| CString::new(a).expect("env::args are invalid"))
+        .collect::<Vec<_>>();
     let args = args.iter().map(|a| a.as_ptr()).collect::<Vec<_>>();
     unsafe { verilated::command_args(args.len() as _, args.as_ptr() as *const *const c_char) }
 }
@@ -511,9 +516,10 @@ pub fn product_version() -> &'static CStr {
 }
 
 /// Convenience OS utilities
-pub fn mkdir(dirname: &OsStr) {
+pub fn mkdir(dirname: impl AsRef<Path>) {
     use std::os::unix::ffi::OsStrExt;
-    let dirname = CString::new(dirname.as_bytes()).expect("dirname is invalid as CString");
+    let dirname = CString::new(dirname.as_ref().as_os_str().as_bytes())
+        .expect("dirname is invalid as CString");
     unsafe { verilated::mkdir(dirname.as_ptr()) }
 }
 
