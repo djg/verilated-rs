@@ -7,3 +7,4 @@ pub mod api;
 pub mod vcd;
 
 pub use crate::api::*;
+pub use verilated_macro::verilated;

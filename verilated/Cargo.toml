@@ -14,6 +14,9 @@ categories = ["api-bindings"]
 
 build = "build.rs"
 
+[dependencies]
+verilated-macro = { path = "../verilated-macro" }
+
 [build-dependencies]
 verilator = { path = "../verilator", version = "0.2", default-features = false }
 cc = "1.0"

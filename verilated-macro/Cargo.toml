@@ -1,0 +1,25 @@
+[package]
+name = "verilated-macro"
+edition = "2018"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+description = """
+Definition of the `#[verilated]` attribute, an internal dependency
+"""
+version = "0.2.0"
+license = "MIT/Apache-2.0"
+repository = "https://github.com/djg/verilated-rs"
+homepage = "https://github.com/djg/verilated-rs"
+keywords = ["verilator","verilog"]
+categories = ["development-tools::procedural-macro-helpers"]
+
+[lib]
+proc-macro = true
+
+[features]
+xxx_debug_only_print_generated_code = []
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }
+# verilated-macro-support = { path = "../verilated-macro-support" }
