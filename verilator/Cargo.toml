@@ -13,8 +13,5 @@ keywords = ["verilator", "verilog"]
 categories = ["development-tools::build-utils","development-tools::ffi", "simulation"]
 
 [dependencies]
-cc = { version = "1.0", optional = true }
-
-[features]
-gen = ["cc"]
-default = ["gen"]
+bindgen = "0.57"
+cc = "1.0"

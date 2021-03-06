@@ -269,6 +269,20 @@ impl Verilator {
 
         cpp_cfg.compile(&format!("V{}__ALL", top_module));
 
+        let builder = bindgen::Builder::default()
+            .clang_args(&["-xc++", "-std=gnu++14"])
+            .clang_arg(format!("-I{}/include", root.to_str().unwrap()))
+            .header(dst.join(format!("V{}.h", top_module)).to_string_lossy())
+            .whitelist_type(format!("V{}", top_module))
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+
+        let bindings = builder.generate().expect("Unable to generate bindings");
+
+        // Write the bindings to the $OUT_DIR/bindings.rs file.
+        bindings
+            .write_to_file(dst.join(format!("V{}.rs", top_module)))
+            .expect("Couldn't write bindings!");
+
         dst
     }
 

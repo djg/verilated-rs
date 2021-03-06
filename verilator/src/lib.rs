@@ -3,7 +3,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-#[cfg(feature = "gen")]
 pub mod gen;
 
 use std::{
