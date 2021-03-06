@@ -22,8 +22,6 @@ pub enum Standard {
 
 /// Builder style configuration for running verilator.
 pub struct Verilator {
-    target: Option<String>,
-    host: Option<String>,
     out_dir: Option<PathBuf>,
     root: Option<PathBuf>,
     files: Vec<(PathBuf, Option<Standard>)>,
@@ -149,7 +147,7 @@ impl Verilator {
         println!("verilator root: {:?}", root);
 
         // Generate .CPP from .V using verilator
-        let mut cmd = Command::new(verilator_exe.clone());
+        let mut cmd = Command::new(verilator_exe);
         cmd.arg("--cc")
             .arg("-Mdir")
             .arg(&dst)
@@ -195,47 +193,25 @@ impl Verilator {
         run(&mut cmd, "verilator");
 
         // Compile the .CPP into library.
-        let target = match self.target.clone() {
-            Some(t) => t,
-            None => {
-                let mut t = getenv_unwrap("TARGET");
-                if t.ends_with("-darwin") {
-                    t += "11";
-                }
-                t
-            }
-        };
-        let host = self.host.clone().unwrap_or_else(|| getenv_unwrap("HOST"));
-
         let mut cpp_cfg = cc::Build::new();
         cpp_cfg
             .cpp(true)
-            .target(&target)
-            .host(&host)
             .out_dir(&dst)
             .define("VL_PRINTF", "printf");
 
         let tool = cpp_cfg.get_compiler();
-        if tool.is_like_clang() {
+        if tool.is_like_gnu() {
             cpp_cfg
+                .flag("-std=gnu++14")
                 .flag("-faligned-new")
                 .flag("-fbracket-depth=4096")
+                .flag("-fcf-protection=none")
                 .flag("-Qunused-arguments")
+                .flag("-Wno-bool-operation")
+                .flag("-Wno-tautological-bitwise-compare")
                 .flag("-Wno-parentheses-equality")
                 .flag("-Wno-sign-compare")
                 .flag("-Wno-uninitialized")
-                .flag("-Wno-unused-parameter")
-                .flag("-Wno-unused-variable")
-                .flag("-Wno-shadow");
-        }
-        if tool.is_like_gnu() {
-            cpp_cfg
-                .flag("-std=gnu++17")
-                .flag("-faligned-new")
-                .flag("-Wno-bool-operation")
-                .flag("-Wno-sign-compare")
-                .flag("-Wno-uninitialized")
-                .flag("-Wno-unused-but-set-variable")
                 .flag("-Wno-unused-parameter")
                 .flag("-Wno-unused-variable")
                 .flag("-Wno-shadow");
@@ -245,6 +221,7 @@ impl Verilator {
             .include(root.join("include/vltstd"))
             .include(&dst)
             .file(dst.join(format!("V{}.cpp", top_module)))
+            .file(dst.join(format!("V{}__Slow.cpp", top_module)))
             .file(dst.join(format!("V{}__Syms.cpp", top_module)));
 
         for &(ref f, _) in &self.files {
@@ -257,10 +234,12 @@ impl Verilator {
         }
 
         if self.coverage {
+            println!("cargo:rustc-cfg=verilated=\"coverage\"");
             cpp_cfg.define("VM_COVERAGE", "1");
         }
 
         if self.trace {
+            println!("cargo:rustc-cfg=verilated=\"trace\"");
             cpp_cfg
                 .define("VM_TRACE", "1")
                 .file(dst.join(format!("V{}__Trace.cpp", top_module)))
@@ -309,8 +288,6 @@ impl Verilator {
 impl Default for Verilator {
     fn default() -> Verilator {
         Verilator {
-            target: None,
-            host: None,
             out_dir: None,
             root: None,
             files: Vec::new(),
