@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 pub mod api;
+pub mod cov;
 pub mod vcd;
 
 pub use crate::api::*;

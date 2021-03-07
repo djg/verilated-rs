@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     // Generate CPP from Verilog
     let mut verilator = Verilator::default();
     verilator
-        .with_coverage(false)
+        .with_coverage(true)
         .with_trace(true)
         .files(&["rtl/sub.sv", "rtl/top.v"])
         .build("top");

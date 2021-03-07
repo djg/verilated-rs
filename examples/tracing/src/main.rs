@@ -123,5 +123,5 @@ fn main() {
 #[cfg(verilated = "coverage")]
 fn write_coverage() {
     verilated::mkdir("logs");
-    verilated_cov::write("logs/coverage.dat");
+    verilated::cov::write("logs/coverage.dat").expect("Failed to write coverage");
 }
