@@ -15,6 +15,7 @@ categories = ["api-bindings"]
 build = "build.rs"
 
 [dependencies]
+log = "0.4"
 verilated-macro = { path = "../verilated-macro" }
 
 [build-dependencies]

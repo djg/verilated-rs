@@ -26,9 +26,10 @@ pub struct Verilator {
     root: Option<PathBuf>,
     files: Vec<(PathBuf, Option<Standard>)>,
     module_directories: Vec<PathBuf>,
+    suppress_warnings: Vec<String>,
     coverage: bool,
     trace: bool,
-    suppress_warnings: Vec<String>,
+    vpi: bool,
 }
 
 impl Verilator {
@@ -110,6 +111,11 @@ impl Verilator {
         self
     }
 
+    pub fn with_vpi(&mut self, t: bool) -> &mut Verilator {
+        self.vpi = t;
+        self
+    }
+
     pub fn warn_width(&mut self, t: bool) -> &mut Verilator {
         if !t {
             self.suppress_warnings.push("width".to_string());
@@ -160,6 +166,10 @@ impl Verilator {
 
         if self.trace {
             cmd.arg("--trace");
+        }
+
+        if self.vpi {
+            cmd.arg("--vpi");
         }
 
         for warn in &self.suppress_warnings {
@@ -246,6 +256,10 @@ impl Verilator {
                 .file(dst.join(format!("V{}__Trace__Slow.cpp", top_module)));
         }
 
+        if self.vpi {
+            println!("cargo:rustc-cfg=verilated=\"vpi\"");
+        }
+
         cpp_cfg.compile(&format!("V{}__ALL", top_module));
 
         let builder = bindgen::Builder::default()
@@ -293,8 +307,9 @@ impl Default for Verilator {
             files: Vec::new(),
             module_directories: Vec::new(),
             coverage: false,
-            trace: false,
             suppress_warnings: Vec::new(),
+            trace: false,
+            vpi: false,
         }
     }
 }
