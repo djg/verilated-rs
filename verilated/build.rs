@@ -3,11 +3,33 @@
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::path::PathBuf;
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 use verilator::find_verilator_root;
 
 fn fail(s: &str) -> ! {
     panic!("\n{}\n\nbuild script failed, must exit now", s)
+}
+
+fn generate_bindings(root: impl AsRef<Path>, prefix: &str, class: &str) {
+    let root = root.as_ref();
+    let builder = bindgen::Builder::default()
+        .clang_args(&["-xc++", "-std=gnu++14"])
+        .clang_arg(format!("-I{}/include", root.to_string_lossy()))
+        .header(root.join(format!("include/{}.h", prefix)).to_string_lossy())
+        .whitelist_type(class)
+        .opaque_type("std.*")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks));
+
+    let bindings = builder.generate().expect("Unable to generate bindings");
+
+    // Write the bindings to the $OUT_DIR/bindings.rs file.
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join(format!("{}.rs", prefix)))
+        .expect("Couldn't write bindings!");
 }
 
 fn main() {
@@ -51,6 +73,8 @@ fn main() {
         cfg.include(&include).include(include.join("vltstd"));
         cfg.files(files);
         cfg.compile("verilated_rt");
+
+        generate_bindings(&root, "verilated_vcd_c", "VerilatedVcd");
     } else {
         fail("Failed to find `${VERILATOR_ROOT}`.  Please set `VERILATOR_ROOT` environment variable or ensure `verilator` is in `PATH`.");
     }
