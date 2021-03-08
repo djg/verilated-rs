@@ -5,6 +5,7 @@
 
 pub mod api;
 pub mod cov;
+pub mod fst;
 pub mod vcd;
 pub mod vpi;
 

@@ -20,6 +20,12 @@ pub enum Standard {
     SystemVerilog2012,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Trace {
+    Fst,
+    Vcd,
+}
+
 /// Builder style configuration for running verilator.
 pub struct Verilator {
     out_dir: Option<PathBuf>,
@@ -27,8 +33,8 @@ pub struct Verilator {
     files: Vec<(PathBuf, Option<Standard>)>,
     module_directories: Vec<PathBuf>,
     suppress_warnings: Vec<String>,
+    trace: Option<Trace>,
     coverage: bool,
-    trace: bool,
     vpi: bool,
 }
 
@@ -106,8 +112,8 @@ impl Verilator {
         self
     }
 
-    pub fn with_trace(&mut self, t: bool) -> &mut Verilator {
-        self.trace = t;
+    pub fn with_trace(&mut self, t: impl Into<Option<Trace>>) -> &mut Verilator {
+        self.trace = t.into();
         self
     }
 
@@ -164,8 +170,14 @@ impl Verilator {
             cmd.arg("--coverage");
         }
 
-        if self.trace {
-            cmd.arg("--trace");
+        match self.trace {
+            Some(Trace::Fst) => {
+                cmd.arg("--trace-fst");
+            }
+            Some(Trace::Vcd) => {
+                cmd.arg("--trace");
+            }
+            _ => {}
         }
 
         if self.vpi {
@@ -248,12 +260,21 @@ impl Verilator {
             cpp_cfg.define("VM_COVERAGE", "1");
         }
 
-        if self.trace {
-            println!("cargo:rustc-cfg=verilated=\"trace\"");
-            cpp_cfg
-                .define("VM_TRACE", "1")
-                .file(dst.join(format!("V{}__Trace.cpp", top_module)))
-                .file(dst.join(format!("V{}__Trace__Slow.cpp", top_module)));
+        match self.trace {
+            Some(Trace::Fst) => {
+                println!("cargo:rustc-cfg=verilated=\"trace-fst\"");
+                cpp_cfg
+                    .file(dst.join(format!("{}__Trace.cpp", prefix)))
+                    .file(dst.join(format!("{}__Trace__Slow.cpp", prefix)));
+            }
+            Some(Trace::Vcd) => {
+                println!("cargo:rustc-cfg=verilated=\"trace-vcd\"");
+                cpp_cfg
+                    .define("VM_TRACE", "1")
+                    .file(dst.join(format!("{}__Trace.cpp", prefix)))
+                    .file(dst.join(format!("{}__Trace__Slow.cpp", prefix)));
+            }
+            _ => {}
         }
 
         if self.vpi {
@@ -306,9 +327,9 @@ impl Default for Verilator {
             root: None,
             files: Vec::new(),
             module_directories: Vec::new(),
-            coverage: false,
             suppress_warnings: Vec::new(),
-            trace: false,
+            trace: None,
+            coverage: false,
             vpi: false,
         }
     }
