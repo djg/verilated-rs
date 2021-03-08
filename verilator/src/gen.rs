@@ -32,6 +32,7 @@ pub struct Verilator {
     root: Option<PathBuf>,
     files: Vec<(PathBuf, Option<Standard>)>,
     module_directories: Vec<PathBuf>,
+    prefix: Option<String>,
     suppress_warnings: Vec<String>,
     trace: Option<Trace>,
     coverage: bool,
@@ -107,6 +108,11 @@ impl Verilator {
         self
     }
 
+    pub fn with_prefix(&mut self, t: impl AsRef<str>) -> &mut Verilator {
+        self.prefix = Some(t.as_ref().to_owned());
+        self
+    }
+
     pub fn with_coverage(&mut self, t: bool) -> &mut Verilator {
         self.coverage = t;
         self
@@ -165,6 +171,10 @@ impl Verilator {
             .arg(&dst)
             .arg("--top-module")
             .arg(top_module);
+
+        if let Some(prefix) = &self.prefix {
+            cmd.arg("--prefix").arg(prefix);
+        }
 
         if self.coverage {
             cmd.arg("--coverage");
@@ -238,13 +248,19 @@ impl Verilator {
                 .flag("-Wno-unused-variable")
                 .flag("-Wno-shadow");
         }
+
+        let prefix = match self.prefix {
+            Some(ref prefix) => prefix.clone(),
+            None => format!("V{}", top_module),
+        };
+
         cpp_cfg
             .include(root.join("include"))
             .include(root.join("include/vltstd"))
             .include(&dst)
-            .file(dst.join(format!("V{}.cpp", top_module)))
-            .file(dst.join(format!("V{}__Slow.cpp", top_module)))
-            .file(dst.join(format!("V{}__Syms.cpp", top_module)));
+            .file(dst.join(format!("{}.cpp", prefix)))
+            .file(dst.join(format!("{}__Slow.cpp", prefix)))
+            .file(dst.join(format!("{}__Syms.cpp", prefix)));
 
         for &(ref f, _) in &self.files {
             match f.extension() {
@@ -281,20 +297,20 @@ impl Verilator {
             println!("cargo:rustc-cfg=verilated=\"vpi\"");
         }
 
-        cpp_cfg.compile(&format!("V{}__ALL", top_module));
+        cpp_cfg.compile(&format!("{}__ALL", prefix));
 
         let builder = bindgen::Builder::default()
             .clang_args(&["-xc++", "-std=gnu++14"])
             .clang_arg(format!("-I{}/include", root.to_str().unwrap()))
-            .header(dst.join(format!("V{}.h", top_module)).to_string_lossy())
-            .whitelist_type(format!("V{}", top_module))
+            .header(dst.join(format!("{}.h", prefix)).to_string_lossy())
+            .whitelist_type(&prefix)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks));
 
         let bindings = builder.generate().expect("Unable to generate bindings");
 
         // Write the bindings to the $OUT_DIR/bindings.rs file.
         bindings
-            .write_to_file(dst.join(format!("V{}.rs", top_module)))
+            .write_to_file(dst.join(format!("{}.rs", prefix)))
             .expect("Couldn't write bindings!");
 
         dst
@@ -327,6 +343,7 @@ impl Default for Verilator {
             root: None,
             files: Vec::new(),
             module_directories: Vec::new(),
+            prefix: None,
             suppress_warnings: Vec::new(),
             trace: None,
             coverage: false,
