@@ -131,6 +131,58 @@ mod verilated {
         #[link_name = "_ZN9Verilated10scopesDumpEv"]
         pub fn scopes_dump();
     }
+
+    extern "C" {
+        #[link_name = "\u{1}__Z9vl_finishPKciS0_"]
+        pub fn vl_finish(filename: *const c_char, linenum: c_int, hier: *const c_char);
+        #[link_name = "\u{1}__Z7vl_stopPKciS0_"]
+        pub fn vl_stop(filename: *const c_char, linenum: c_int, hier: *const c_char);
+        #[link_name = "\u{1}__Z8vl_fatalPKciS0_S0_"]
+        pub fn vl_fatal(
+            filename: *const c_char,
+            linenum: c_int,
+            hier: *const c_char,
+            msg: *const c_char,
+        );
+    }
+}
+
+/// Routine to call for $finish
+/// User code may wish to replace this function, to do so, define VL_USER_FINISH.
+/// This code does not have to be thread safe.
+/// Verilator internal code must call VL_FINISH_MT instead, which eventually calls this.
+pub fn vl_finish(filename: &str, linenum: u32, hier: &str) {
+    assert!(linenum < (1 << 31));
+    let filename = CString::new(filename).expect("filename: invalid CString");
+    let hier = CString::new(hier).expect("hier: invalid CString");
+    unsafe {
+        verilated::vl_finish(filename.as_ptr(), linenum as i32, hier.as_ptr());
+    }
+}
+
+/// Routine to call for $stop
+/// User code may wish to replace this function, to do so, define VL_USER_STOP.
+/// This code does not have to be thread safe.
+/// Verilator internal code must call VL_FINISH_MT instead, which eventually calls this.
+pub fn vl_stop(filename: &str, linenum: i32, hier: &str) {
+    let filename = CString::new(filename).expect("filename: invalid CString");
+    let hier = CString::new(hier).expect("hier: invalid CString");
+    unsafe {
+        verilated::vl_stop(filename.as_ptr(), linenum, hier.as_ptr());
+    }
+}
+
+/// Routine to call for a couple of fatal messages
+/// User code may wish to replace this function, to do so, define VL_USER_FATAL.
+/// This code does not have to be thread safe.
+/// Verilator internal code must call VL_FINISH_MT instead, which eventually calls this.
+pub fn vl_fatal(filename: &str, linenum: i32, hier: &str, msg: &str) {
+    let filename = CString::new(filename).expect("filename: invalid CString");
+    let hier = CString::new(hier).expect("hier: invalid CString");
+    let msg = CString::new(msg).expect("msg: invalid CString");
+    unsafe {
+        verilated::vl_fatal(filename.as_ptr(), linenum, hier.as_ptr(), msg.as_ptr());
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
