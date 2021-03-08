@@ -7,7 +7,7 @@ use crate::{comments::extract_doc_comments, error::Diagnostic};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{
-    parse::{Parse, ParseStream, Parser, Result as SynResult},
+    parse::{Parse, ParseStream, Result as SynResult},
     Token,
 };
 
@@ -33,18 +33,50 @@ fn parse_ident(input: ParseStream) -> SynResult<Ident> {
     })
 }
 
-/// The possible attributes in the `#[verilated]`.
-pub struct VerilatedAttr(Span, String, Span);
+#[derive(Default)]
+pub struct VerilatedAttrs {
+    pub attrs: Vec<VerilatedAttr>,
+}
 
-impl VerilatedAttr {
-    pub fn opt_parse(input: ParseStream) -> SynResult<Option<Self>> {
+impl VerilatedAttrs {
+    fn eval_end_step(&self) -> Option<Span> {
+        self.attrs
+            .iter()
+            .filter_map(|a| match a {
+                VerilatedAttr::EvalEndStep(span) => Some(*span),
+                _ => None,
+            })
+            .next()
+    }
+
+    fn module(&self) -> Option<(&str, Span)> {
+        self.attrs
+            .iter()
+            .filter_map(|a| match a {
+                VerilatedAttr::Module(_, s, span) => Some((&s[..], *span)),
+                _ => None,
+            })
+            .next()
+    }
+}
+
+impl Parse for VerilatedAttrs {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        let mut attrs = VerilatedAttrs::default();
         if input.is_empty() {
-            return Ok(None);
+            return Ok(attrs);
         }
 
-        let attr = Self::parse(input)?;
-        Ok(Some(attr))
+        let opts = syn::punctuated::Punctuated::<_, syn::token::Comma>::parse_terminated(input)?;
+        attrs.attrs = opts.into_iter().collect();
+        Ok(attrs)
     }
+}
+
+/// The possible attributes in the `#[verilated]`.
+pub enum VerilatedAttr {
+    EvalEndStep(Span),
+    Module(Span, String, Span),
 }
 
 impl Parse for VerilatedAttr {
@@ -53,6 +85,10 @@ impl Parse for VerilatedAttr {
         let attr = parse_ident(input)?;
         let attr_span = attr.span();
         let attr_string = attr.to_string();
+
+        if attr_string == "eval_end_step" {
+            return Ok(VerilatedAttr::EvalEndStep(attr_span));
+        }
 
         if attr_string == "module" {
             input.parse::<Token![=]>()?;
@@ -63,14 +99,14 @@ impl Parse for VerilatedAttr {
                     (ident.to_string(), ident.span())
                 }
             };
-            return Ok(VerilatedAttr(attr_span, val, span));
+            return Ok(VerilatedAttr::Module(attr_span, val, span));
         }
 
         Err(original.error("unknown attribute"))
     }
 }
 
-fn convert(item: &mut syn::ItemStruct, attr: Option<VerilatedAttr>) -> Result<Module, Diagnostic> {
+fn convert(item: &mut syn::ItemStruct, attrs: VerilatedAttrs) -> Result<Module, Diagnostic> {
     if !item.generics.params.is_empty() {
         bail_span!(
             item.generics,
@@ -84,23 +120,25 @@ fn convert(item: &mut syn::ItemStruct, attr: Option<VerilatedAttr>) -> Result<Mo
             "structs with #[verilated] cannot have fields currently"
         );
     }
-    let verilog_name = attr
-        .map(|s| s.1)
+    let verilog_name = attrs
+        .module()
+        .map(|s| s.0.to_owned())
         .unwrap_or_else(|| item.ident.to_string().to_lowercase());
     let comments: Vec<String> = extract_doc_comments(&item.attrs);
+    let eval_end_step = attrs.eval_end_step().is_some();
     Ok(Module {
         rust_name: item.ident.clone(),
         verilog_name,
         comments,
+        eval_end_step,
     })
 }
 
 /// Takes the parsed input from a `#[verilated]` macro and returns the generated bindings
 pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diagnostic> {
     let mut item = syn::parse2::<syn::ItemStruct>(input)?;
-    let parser = VerilatedAttr::opt_parse;
-    let opt = parser.parse2(attr)?;
-    let module = convert(&mut item, opt)?;
+    let opts = syn::parse2(attr)?;
+    let module = convert(&mut item, opts)?;
 
     let mut tokens = proc_macro2::TokenStream::new();
     module.to_tokens(&mut tokens);
@@ -109,11 +147,13 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
 
 struct Module {
     /// The name of the struct is Rust code
-    pub rust_name: Ident,
+    rust_name: Ident,
     /// The name of the module in Verilog code
-    pub verilog_name: String,
+    verilog_name: String,
     /// The doc comments on this struct, if provided
-    pub comments: Vec<String>,
+    comments: Vec<String>,
+    /// Should eval_end_step be generated?
+    eval_end_step: bool,
 }
 
 impl Module {
@@ -125,6 +165,16 @@ impl Module {
         let ffi_constructor =
             Ident::new(&format!("V{0}_V{0}", self.verilog_name), Span::call_site());
         let rust_name = &self.rust_name;
+
+        let eval_end_step = if !self.eval_end_step {
+            quote! {
+                unsafe {
+                    self.0.eval_end_step();
+                }
+            }
+        } else {
+            quote! {}
+        };
 
         (quote! {
             mod #binding_mod {
@@ -153,8 +203,35 @@ impl Module {
                     Ok(unsafe { Box::from_raw(raw) })
                 }
 
-                /// Trace signals in the model; called by application code
-                // void trace(VerilatedVcdC* tfp, int levels, int options = 0);
+                /// Trace signals in the model
+                #[cfg(verilated = "trace-vcd")]
+                fn trace_with_options(&mut self, vcd: &mut verilated::vcd::Vcd, levels: i32, options: i32) {
+                    unsafe {
+                        let vcd_c = vcd as *mut _ as *mut #binding_mod::VerilatedVcdC;
+                        self.0.trace(vcd_c, levels, options)
+                    }
+                }
+
+                /// Trace signals in the model
+                #[cfg(verilated = "trace-vcd")]
+                fn trace(&mut self, vcd: &mut verilated::vcd::Vcd, levels: i32) {
+                    self.trace_with_options(vcd, levels, 0)
+                }
+
+                /// Trace signals in the model
+                #[cfg(verilated = "trace-fst")]
+                fn trace_with_options(&mut self, fst: &mut verilated::fst::Fst, levels: i32, options: i32) {
+                    unsafe {
+                        let fst_c = fst as *mut _ as *mut #binding_mod::VerilatedFstC;
+                        self.0.trace(fst_c, levels, options)
+                    }
+                }
+
+                /// Trace signals in the model
+                #[cfg(verilated = "trace-fst")]
+                fn trace(&mut self, fst: &mut verilated::fst::Fst, levels: i32) {
+                    self.trace_with_options(fst, levels, 0)
+                }
 
                 /// Evaluate the model.  Application must call when inputs change.
                 pub fn eval(&mut self) {
@@ -172,9 +249,7 @@ impl Module {
                 /// Evaluate at end of a timestep for tracing, when using eval_step().
                 /// Application must call after all eval() and before time changes.
                 pub fn eval_end_step(&mut self) {
-                    unsafe {
-                        self.0.eval_end_step();
-                    }
+                    #eval_end_step
                 }
 
                 /// Simulation complete, run final blocks.  Application must call on completion.
