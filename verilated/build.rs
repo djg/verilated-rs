@@ -40,6 +40,7 @@ fn main() {
             "verilated.cpp",
             "verilated_cov.cpp",
             "verilated_dpi.cpp",
+            "verilated_fst_c.cpp",
             "verilated_save.cpp",
             "verilated_vcd_c.cpp",
             "verilated_vpi.cpp",
@@ -63,18 +64,15 @@ fn main() {
                 .flag("-Wno-uninitialized")
                 .flag("-Wno-unused-parameter")
                 .flag("-Wno-unused-variable")
-                .flag("-Wno-shadow")
-                .flag("-Os");
+                .flag("-Wno-shadow");
         }
-        cfg.define("VM_COVERAGE", "0")
-            .define("VM_SC", "0")
-            .define("VM_TRACE", "1")
-            .define("VM_TRACE_FST", "0");
+        cfg.define("VM_COVERAGE", "1");
         cfg.include(&include).include(include.join("vltstd"));
         cfg.files(files);
         cfg.compile("verilated_rt");
 
         generate_bindings(&root, "verilated_vcd_c", "VerilatedVcd");
+        generate_bindings(&root, "verilated_fst_c", "VerilatedFst");
     } else {
         fail("Failed to find `${VERILATOR_ROOT}`.  Please set `VERILATOR_ROOT` environment variable or ensure `verilator` is in `PATH`.");
     }
