@@ -12,6 +12,42 @@ pub mod vpi;
 pub use crate::api::*;
 pub use verilated_macro::verilated;
 
+#[macro_export]
+macro_rules! if_coverage {
+    ($($stmt:stmt;)*) => {
+        $(#[cfg(verilated = "coverage")]
+          $stmt;
+        )*
+    }
+}
+
+#[macro_export]
+macro_rules! if_trace {
+    ($($stmt:stmt;)*) => {
+        $(#[cfg(any(verilated = "trace-fst", verilated = "trace-vcd"))]
+          $stmt;
+        )*
+    }
+}
+
+#[macro_export]
+macro_rules! if_trace_fst {
+    ($($stmt:stmt;)*) => {
+        $(#[cfg(verilated = "trace-fst")]
+          $stmt;
+        )*
+    }
+}
+
+#[macro_export]
+macro_rules! if_trace_vcd {
+    ($($stmt:stmt;)*) => {
+        $(#[cfg(verilated = "trace-vcd")]
+          $stmt;
+        )*
+    }
+}
+
 extern "C" {
     fn sc_time_stamp() -> f64;
 }
