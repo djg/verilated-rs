@@ -315,7 +315,7 @@ impl Default for Verilator {
             module_directories: Vec::new(),
             coverage: false,
             trace: false,
-            optimized: true,
+            optimized: false,
             suppress_warnings: Vec::new(),
         }
     }
