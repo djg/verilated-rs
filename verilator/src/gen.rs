@@ -25,6 +25,7 @@ pub struct Verilator {
     module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
+    optimized: bool, 
     suppress_warnings: Vec<String>,
 }
 
@@ -107,6 +108,11 @@ impl Verilator {
         self
     }
 
+    pub fn with_performance_optimizations(&mut self, t: bool) -> &mut Verilator {
+        self.optimized = t;
+        self
+    }
+
     pub fn warn_width(&mut self, t: bool) -> &mut Verilator {
         if !t {
             self.suppress_warnings.push("width".to_string());
@@ -160,6 +166,10 @@ impl Verilator {
 
         if self.trace {
             cmd.arg("--trace");
+        }
+
+        if self.optimized {
+            cmd.arg("-O3");
         }
 
         for warn in &self.suppress_warnings {
@@ -305,6 +315,7 @@ impl Default for Verilator {
             module_directories: Vec::new(),
             coverage: false,
             trace: false,
+            optimized: false,
             suppress_warnings: Vec::new(),
         }
     }
