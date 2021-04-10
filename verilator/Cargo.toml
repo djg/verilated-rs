@@ -4,7 +4,7 @@ description = """
 Automated generation of Verilator test modules.
 """
 authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
-version = "0.1.5"
+version = "0.1.6"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/djg/verilated-rs"
 homepage = "https://github.com/djg/verilated-rs"
