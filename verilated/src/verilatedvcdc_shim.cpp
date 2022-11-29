@@ -41,11 +41,19 @@ verilatedvcdc_open_next(VerilatedVcdC* vcd, int inc_filename) {
   vcd->openNext(inc_filename ? true : false);
 }
 
+#if VERILATOR_VERSION_MAJOR > 4 || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 226)
+/// Set size in bytes after which new file should be created.
+void
+verilatedvcdc_rollover_size(VerilatedVcdC* vcd, size_t size) {
+    vcd->rolloverSize(size);
+}
+#else // !(VERILATOR_VERSION_MAJOR > 4 || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 226))
 /// Set size in megabytes after which new file should be created
 void
 verilatedvcdc_rollover_mb(VerilatedVcdC* vcd, size_t rolloverMB) {
     vcd->rolloverMB(rolloverMB);
 }
+#endif // VERILATOR_VERSION_MAJOR > 4 || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 226)
 
 /// Close dump
 void
