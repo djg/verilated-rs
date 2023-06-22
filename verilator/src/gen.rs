@@ -1,4 +1,4 @@
-use verilator_version;
+use super::verilator_version;
 use cc;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ pub struct Verilator {
     module_directories: Vec<PathBuf>,
     coverage: bool,
     trace: bool,
-    optimized: bool, 
+    optimized: bool,
     suppress_warnings: Vec<String>,
 }
 
@@ -254,6 +254,27 @@ impl Verilator {
             .include(&dst)
             .file(dst.join(format!("V{}.cpp", top_module)))
             .file(dst.join(format!("V{}__Syms.cpp", top_module)));
+
+        let extra_modules: Vec<_> = glob::glob(&format!(
+            "{}/V*__Slow.cpp",
+            &dst.to_string_lossy().to_string()
+        ))
+        .expect("Failed to read glob pattern")
+        .map(|entry| match entry {
+            Ok(path) => path.file_name().map(|s| s.to_string_lossy().to_string()),
+            Err(_) => None,
+        })
+        .filter_map(|s| s)
+        .map(|s| s.strip_prefix("V").unwrap().replace("__Slow.cpp", ""))
+        .filter(|s| s != &top_module)
+        .filter(|s| s != &format!("{}__Trace", &top_module))
+        .collect();
+
+        for module in extra_modules {
+            cpp_cfg
+                .file(dst.join(format!("V{}.cpp", module)))
+                .file(dst.join(format!("V{}__Slow.cpp", module)));
+        }
 
         if verilator_major > 4 || verilator_minor >= 38 {
             cpp_cfg.file(dst.join(format!("V{}__Slow.cpp", top_module)));
