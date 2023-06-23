@@ -1,5 +1,5 @@
-use super::verilator_version;
 use cc;
+use std::fs::read_dir;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -136,9 +136,6 @@ impl Verilator {
         let mut cmd = Command::new(verilator_exe.clone());
         cmd.arg("--getenv").arg("VERILATOR_ROOT");
 
-        // Determine the Verilator version
-        let (verilator_major, verilator_minor) = verilator_version().unwrap();
-
         println!("running: {:?}", cmd);
         let root = match cmd.output() {
             Ok(output) => PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()),
@@ -251,33 +248,22 @@ impl Verilator {
         cpp_cfg
             .include(root.join("include"))
             .include(root.join("include/vltstd"))
-            .include(&dst)
-            .file(dst.join(format!("V{}.cpp", top_module)))
-            .file(dst.join(format!("V{}__Syms.cpp", top_module)));
+            .include(&dst);
 
-        let extra_modules: Vec<_> = glob::glob(&format!(
-            "{}/V*__Slow.cpp",
-            &dst.to_string_lossy().to_string()
-        ))
-        .expect("Failed to read glob pattern")
-        .map(|entry| match entry {
-            Ok(path) => path.file_name().map(|s| s.to_string_lossy().to_string()),
-            Err(_) => None,
-        })
-        .filter_map(|s| s)
-        .map(|s| s.strip_prefix("V").unwrap().replace("__Slow.cpp", ""))
-        .filter(|s| s != &top_module)
-        .filter(|s| s != &format!("{}__Trace", &top_module))
-        .collect();
+        let all_files = read_dir(&dst).map_or(Vec::new(), |read_dir| read_dir.collect());
+
+        let extra_modules: Vec<_> = all_files
+            .iter()
+            .filter_map(|entry| match entry {
+                Ok(path) => Some(path.file_name().to_string_lossy().to_string()),
+                Err(_) => None,
+            })
+            .filter(|s| s.starts_with("V") && s.ends_with(".cpp"))
+            .filter(|s| !s.contains("__Trace.cpp") && !s.contains("__Trace__Slow.cpp"))
+            .collect();
 
         for module in extra_modules {
-            cpp_cfg
-                .file(dst.join(format!("V{}.cpp", module)))
-                .file(dst.join(format!("V{}__Slow.cpp", module)));
-        }
-
-        if verilator_major > 4 || verilator_minor >= 38 {
-            cpp_cfg.file(dst.join(format!("V{}__Slow.cpp", top_module)));
+            cpp_cfg.file(dst.join(module));
         }
 
         for &(ref f, _) in &self.files {
