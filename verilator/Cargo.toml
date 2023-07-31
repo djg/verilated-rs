@@ -9,13 +9,23 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/djg/verilated-rs"
 homepage = "https://github.com/djg/verilated-rs"
 keywords = ["verilator", "verilog"]
-categories = ["development-tools::build-utils","development-tools::ffi", "simulation"]
+categories = [
+    "development-tools::build-utils",
+    "development-tools::ffi",
+    "simulation",
+]
+edition = "2021"
 
 [dependencies]
 cc = { version = "1.0", optional = true }
 fnv = { version = "1.0", optional = true }
+glob = "0.3.1"
 regex = "1.4"
-syn = { version = "0.13", features = ["extra-traits", "full", "visit"], optional = true }
+syn = { version = "0.13", features = [
+    "extra-traits",
+    "full",
+    "visit",
+], optional = true }
 
 [features]
 gen = ["cc"]
