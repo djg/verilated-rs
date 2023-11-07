@@ -12,12 +12,11 @@ keywords = ["verilator", "verilog"]
 categories = ["development-tools::build-utils","development-tools::ffi", "simulation"]
 
 [dependencies]
-cc = { version = "1.0", optional = true }
 fnv = { version = "1.0", optional = true }
 regex = "1.4"
 syn = { version = "0.13", features = ["extra-traits", "full", "visit"], optional = true }
 
 [features]
-gen = ["cc"]
+gen = []
 module = ["fnv", "syn"]
 default = ["gen"]

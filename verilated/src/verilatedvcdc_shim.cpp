@@ -43,8 +43,12 @@ verilatedvcdc_open_next(VerilatedVcdC* vcd, int inc_filename) {
 
 /// Set size in megabytes after which new file should be created
 void
-verilatedvcdc_rollover_mb(VerilatedVcdC* vcd, size_t rolloverMB) {
-    vcd->rolloverMB(rolloverMB);
+verilatedvcdc_rollover_mb(VerilatedVcdC* vcd, size_t rolloverSize) {
+#if (VERILATOR_VERSION_MAJOR >= 5) || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 226)
+    vcd->rolloverSize(rolloverSize);
+#else
+    vcd->rolloverMB(rolloverSize);
+#endif
 }
 
 /// Close dump

@@ -1,5 +1,3 @@
-#[cfg(feature = "gen")]
-extern crate cc;
 #[cfg(feature = "module")]
 extern crate fnv;
 extern crate regex;

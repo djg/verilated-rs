@@ -22,7 +22,7 @@ fn main() {
         // cargo:rustc-cfg=KEY[="VALUE"]
         let (major, minor) = verilator_version().unwrap();
         println!("cargo:rustc-cfg=verilator_version=\"{}.{}\"", major, minor);
-        if major == 4 && minor >= 38 {
+        if (major >= 5) || (major == 4 && minor >= 38) {
             println!("cargo:rustc-cfg=verilator=\"flush_and_exit_cb\"");
         }
 
