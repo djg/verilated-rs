@@ -1,5 +1,3 @@
-use verilator_version;
-use cc;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -17,8 +15,6 @@ pub enum Standard {
 
 /// Builder style configuration for running verilator.
 pub struct Verilator {
-    target: Option<String>,
-    host: Option<String>,
     out_dir: Option<PathBuf>,
     root: Option<PathBuf>,
     files: Vec<(PathBuf, Option<Standard>)>,
@@ -136,9 +132,6 @@ impl Verilator {
         let mut cmd = Command::new(verilator_exe.clone());
         cmd.arg("--getenv").arg("VERILATOR_ROOT");
 
-        // Determine the Verilator version
-        let (verilator_major, verilator_minor) = verilator_version().unwrap();
-
         println!("running: {:?}", cmd);
         let root = match cmd.output() {
             Ok(output) => PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()),
@@ -152,13 +145,16 @@ impl Verilator {
         };
         println!("verilator root: {:?}", root);
 
+        let lib_name = format!("_{top_module}");
         // Generate .CPP from .V using verilator
         let mut cmd = Command::new(verilator_exe.clone());
         cmd.arg("--cc")
             .arg("-Mdir")
             .arg(&dst)
             .arg("--top-module")
-            .arg(top_module);
+            .arg(top_module)
+            .arg("--lib-create")
+            .arg(lib_name.clone());
 
         if self.coverage {
             cmd.arg("--coverage");
@@ -197,90 +193,22 @@ impl Verilator {
                 }
             }
 
-            cmd.arg(file);
+            // verilator will generate relative path in .d files
+            // which will cause make cannot find files.
+            cmd.arg(fs::canonicalize(file).unwrap());
         }
 
         run(&mut cmd, "verilator");
 
-        // Compile the .CPP into library.
-        let target = match self.target.clone() {
-            Some(t) => t,
-            None => {
-                let mut t = getenv_unwrap("TARGET");
-                if t.ends_with("-darwin") {
-                    t += "11";
-                }
-                t
-            }
-        };
-        let host = self.host.clone().unwrap_or_else(|| getenv_unwrap("HOST"));
-
-        let mut cpp_cfg = cc::Build::new();
-        cpp_cfg
-            .cpp(true)
-            .target(&target)
-            .host(&host)
-            .out_dir(&dst)
-            .define("VL_PRINTF", "printf");
-
-        let tool = cpp_cfg.get_compiler();
-        if tool.is_like_clang() {
-            cpp_cfg
-                .flag("-faligned-new")
-                .flag("-fbracket-depth=4096")
-                .flag("-Qunused-arguments")
-                .flag("-Wno-parentheses-equality")
-                .flag("-Wno-sign-compare")
-                .flag("-Wno-uninitialized")
-                .flag("-Wno-unused-parameter")
-                .flag("-Wno-unused-variable")
-                .flag("-Wno-shadow");
-        }
-        if tool.is_like_gnu() {
-            cpp_cfg
-                .flag("-std=gnu++17")
-                .flag("-faligned-new")
-                .flag("-Wno-bool-operation")
-                .flag("-Wno-sign-compare")
-                .flag("-Wno-uninitialized")
-                .flag("-Wno-unused-but-set-variable")
-                .flag("-Wno-unused-parameter")
-                .flag("-Wno-unused-variable")
-                .flag("-Wno-shadow");
-        }
-        cpp_cfg
-            .include(root.join("include"))
-            .include(root.join("include/vltstd"))
-            .include(&dst)
-            .file(dst.join(format!("V{}.cpp", top_module)))
-            .file(dst.join(format!("V{}__Syms.cpp", top_module)));
-
-        if verilator_major > 4 || verilator_minor >= 38 {
-            cpp_cfg.file(dst.join(format!("V{}__Slow.cpp", top_module)));
-        }
-
-        for &(ref f, _) in &self.files {
-            match f.extension() {
-                Some(ext) if ext == "c" || ext == "cpp" => {
-                    cpp_cfg.file(f);
-                }
-                _ => {}
-            };
-        }
-
-        if self.coverage {
-            cpp_cfg.define("VM_COVERAGE", "1");
-        }
-
-        if self.trace {
-            cpp_cfg
-                .define("VM_TRACE", "1")
-                .file(dst.join(format!("V{}__Trace.cpp", top_module)))
-                .file(dst.join(format!("V{}__Trace__Slow.cpp", top_module)));
-        }
-
-        cpp_cfg.compile(&format!("V{}__ALL", top_module));
-
+        Command::new("make")
+            .current_dir(dst.clone())
+            .args(["-f", &format!("V{}.mk", top_module)])
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+        println!("cargo:rustc-link-search={}", dst.to_str().unwrap());
+        println!("cargo:rustc-link-lib={lib_name}");
         dst
     }
 
@@ -307,8 +235,6 @@ impl Verilator {
 impl Default for Verilator {
     fn default() -> Verilator {
         Verilator {
-            target: None,
-            host: None,
             out_dir: None,
             root: None,
             files: Vec::new(),

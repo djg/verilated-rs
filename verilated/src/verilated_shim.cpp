@@ -87,7 +87,7 @@ verilated_fatal_on_vpi_error() {
   return Verilated::fatalOnVpiError() ? 1 : 0;
 }
 
-#if VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38
+#if (VERILATOR_VERSION_MAJOR >= 5) || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38)
 typedef void (*voidp_cb)(void*);  // Callback type for below
 
 /// Callbacks to run on global flush
@@ -121,7 +121,7 @@ void
 verilator_run_exit_callbacks() {
   Verilated::runExitCallbacks();
 }
-#else // !(VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38)
+#else // !((VERILATOR_VERSION_MAJOR >= 5) || (VERILATOR_VERSION_MAJOR == 4 && VERILATOR_VERSION_MINOR >= 38))
 /// Flush callback for VCD waves
 void
 verilated_flush_cb(VerilatedVoidCb cb) {
